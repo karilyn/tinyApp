@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/karilyn/tinyApp/issues"
   },
-  "homepage": "https://github.com/karilyn/tinyApp#readme"
+  "homepage": "https://github.com/karilyn/tinyApp#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
 }
