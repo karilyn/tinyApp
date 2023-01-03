@@ -12,6 +12,11 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+// registers handler for the path /urls.json
+app.get("/urls.json", (req, res) => {
+  res.json(urlDatabase);
+});
+
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
