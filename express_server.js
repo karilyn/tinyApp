@@ -20,9 +20,16 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
+// route for URLs table template
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
+});
+
+// route for single URL
+app.get("/urls/:id", (req, res) => {
+  const templateVars = { id: req.params.id, longURL: req.params.longURL };
+  res.render("urls_show", templateVars);
 });
 
 // registers a handler for the path /hello
