@@ -7,7 +7,9 @@ app.set("view engine", "ejs");
 
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
-  '9sm5xK': 'http://www.google.com'
+  '9sm5xK': 'http://www.google.com',
+  'id': 'here i am',
+  fart: 'asdfasdf'
 };
 
 // registers a handler on the root path '/'
@@ -28,7 +30,8 @@ app.get('/urls', (req, res) => {
 
 // route for single URL
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: req.params.longURL };
+  let id = req.params.id;
+  const templateVars = { id: id, longURL: urlDatabase[id] };
   res.render("urls_show", templateVars);
 });
 
