@@ -1,9 +1,10 @@
 const express = require('express');
 const app = express();
 const PORT = 8080; // default port 8080
-
 // setting EJS as templating engine
 app.set("view engine", "ejs");
+// converts request body into readable string
+app.use(express.urlencoded({ extended: true }));
 
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
