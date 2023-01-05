@@ -22,13 +22,18 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 });
 
-// route for URLs table template
+// GET route for URLs table template
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
 
-// route for single URL
+//a GET route to render the urls_new.ejs template in the browser, to present the form to the user
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
+// GET route for single URL
 app.get("/urls/:id", (req, res) => {
   let id = req.params.id;
   const templateVars = { id: id, longURL: urlDatabase[id] };
