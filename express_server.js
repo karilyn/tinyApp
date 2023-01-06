@@ -18,18 +18,15 @@ app.use(express.urlencoded({ extended: true }));
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com',
-  'id': 'here i am',
-  fart: 'asdfasdf'
 };
 
 ////////////////////////////////////////////
 /////////////// FUNCTIONS //////////////////
 ///////////////////////////////////////////
 
-const generateRandomString = function (length) {
+const generateRandomString = function (length = 6) {
   return Math.random().toString(36).substr(2, length)
 };
-generateRandomString(6);
 
 
 ////////////////////////////////////////////
@@ -50,14 +47,41 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+
 app.post("/urls", (req, res) => {
-  console.log(req.body); // Log the POST request body to the console
-  res.send("Ok"); // Respond with 'Ok' (we will replace this)
+  // server generates short random id, adds it to database
+  let id = generateRandomString(6);
+  // the value of the new id is the longURL submitted by user
+  urlDatabase[id] = req.body.longURL;
+  // the POST then redirects to the url page for that unique id
+  res.redirect(`/urls/${id}`);
 });
+
+
+// set a redirect to the longURL
+app.get("/u/:id", (req, res) => {
+  // look up the longURL from the id
+  let longURL =   urlDatabase[req.params.id];
+  // if the id exists in the database
+  if (longURL){
+    res.redirect(longURL);
+  }
+  else {
+    res.redirect('/urls');
+  }
+});
+
 
 //////////////////////////////////////////////
 ////////////// READ OPERATIONS/////////////////
 //////////////////////////////////////////////
+
+// GET route for single URL
+app.get("/urls/:id", (req, res) => {
+  let id = req.params.id;
+  const templateVars = { id: id, longURL: urlDatabase[id] };
+  res.render("urls_show", templateVars);
+});
 
 // registers handler for the path /urls.json
 app.get('/urls.json', (req, res) => {
@@ -71,12 +95,7 @@ app.get('/urls', (req, res) => {
 });
 
 
-// GET route for single URL
-app.get("/urls/:id", (req, res) => {
-  let id = req.params.id;
-  const templateVars = { id: id, longURL: urlDatabase[id] };
-  res.render("urls_show", templateVars);
-});
+
 
 // registers a handler for the path /hello
 app.get('/hello', (req, res) => {
