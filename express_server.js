@@ -106,7 +106,11 @@ app.get('/hello', (req, res) => {
 /***************************************/
 /********* UPDATE OPERATIONS ***********/
 /***************************************/
-
+app.post('/urls/:id/edit', (req, res) => {
+  let id = req.params.id;
+  urlDatabase[id] = req.body.longURL;
+  res.redirect('/urls');
+})
 
 
 /***************************************/
