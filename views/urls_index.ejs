@@ -46,19 +46,16 @@
               </td>
               <td>
                 <form method="POST" action="/urls/<%= id %>/delete">
-                  <button type="submit">Delete</button>
+                  <button type="submit">Delete
                 </form>
               </td>
               <td>
-                <form method="POST" action="/urls/<%= id %>/edit">
-                  <button type="submit">Edit</button>
-                </form>
+                <button type="submit">
+                <a href="/urls/<%= id %>">Edit</a>
+                </button>
               </td>
             </tr>
           <% } %>
-          <tr>
-            <td><a href='#'>Shorten a new URL</a></td>
-          </tr>
         </tbody>
       </table>
     </main>
