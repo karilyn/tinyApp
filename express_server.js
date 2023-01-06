@@ -43,11 +43,12 @@ app.get('/', (req, res) => {
 //////////////////////////////////////////////
 
 // a GET route to render the urls_new.ejs template in the browser, to present the form to the user
+// CREATE (FORM)
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-
+// CREATE NEW ENTRY
 app.post("/urls", (req, res) => {
   // server generates short random id, adds it to database
   let id = generateRandomString(6);
@@ -61,7 +62,7 @@ app.post("/urls", (req, res) => {
 // set a redirect to the longURL
 app.get("/u/:id", (req, res) => {
   // look up the longURL from the id
-  let longURL =   urlDatabase[req.params.id];
+  let longURL = urlDatabase[req.params.id];
   // if the id exists in the database
   if (longURL){
     res.redirect(longURL);
@@ -89,12 +90,11 @@ app.get('/urls.json', (req, res) => {
 });
 
 // GET route for URLs table template
+// READ ALL
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render('urls_index', templateVars);
 });
-
-
 
 
 // registers a handler for the path /hello
@@ -102,10 +102,21 @@ app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
 
+//////////////////////////////////////////////
+//////////// DELETE OPERATIONS////////////////
+//////////////////////////////////////////////
+
+// registers POST route to remove URL resource
+app.post('/urls/:id/delete', (req, res) => {
+  let id = req.params.id;
+  delete urlDatabase.id;
+  res.redirect('/urls');
+});
+
 
 ///////////////////////////////////////////////
 ////// SERVER LISTENING ///////////////////////
 ///////////////////////////////////////////////
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`TinyApp listening on port ${PORT}!`);
 });
