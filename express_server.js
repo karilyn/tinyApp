@@ -35,7 +35,7 @@ const generateRandomString = function (length = 6) {
 
 // registers a handler on the root path '/'
 app.get('/', (req, res) => {
-  res.send('Hello!');
+  res.redirect('/urls');
 });
 
 //////////////////////////////////////////////
@@ -63,12 +63,12 @@ app.post("/urls", (req, res) => {
 app.get("/u/:id", (req, res) => {
   // look up the longURL from the id
   let longURL = urlDatabase[req.params.id];
-  // if the id exists in the database
+  // if the id exists in the database, go to its page
   if (longURL){
     res.redirect(longURL);
   }
   else {
-    res.redirect('/urls');
+    res.redirect('/urls'); // if not, go back to index
   }
 });
 
@@ -108,8 +108,10 @@ app.get('/hello', (req, res) => {
 
 // registers POST route to remove URL resource
 app.post('/urls/:id/delete', (req, res) => {
+
   let id = req.params.id;
-  delete urlDatabase.id;
+  delete urlDatabase[id];
+
   res.redirect('/urls');
 });
 
