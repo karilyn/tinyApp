@@ -5,20 +5,27 @@ const PORT = 8080; // default port 8080
 app.set('view engine', 'ejs');
 
 /***************************************/
-/************ MIDDLWARE ****************/
+/************ MIDDLEWARE ****************/
 /***************************************/
 
 // converts request body into readable string
 app.use(express.urlencoded({ extended: true }));
 let cookies = require('cookie-parser');
+const { reset } = require('nodemon');
 app.use(cookies());
 /***************************************/
-/************* DATABASE ****************/
+/************* DATABASES ****************/
 /***************************************/
 
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com',
+};
+
+const users = {
+  username: "username",
+  email: "email",
+  password: "password",
 };
 
 /***************************************/
@@ -68,6 +75,15 @@ app.post('/login', (req, res) => {
   res.cookie('username', username);
   res.redirect('/urls');
 })
+
+// CREATE NEW REGISTRANT
+// app.post('/register', (req, res) => {
+//   let email = req.body.email.toLowerCase();
+//   let password = req.body.password;
+//   res.cookie('email', email);
+//   res.password('password', password);
+//   res.redirect('/urls');
+// })
 
 /***************************************/
 /********* READ OPERATIONS ***********/
@@ -120,6 +136,15 @@ app.get('/urls', (req, res) => {
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
+
+// GET route for registration form
+app.get('/register', (req, res) => {
+  const templateVars = {
+    email: req.cookies['email'],
+    password: req.cookies['password'],
+  };
+  res.render('register', templateVars);
+})
 
 /***************************************/
 /********* UPDATE OPERATIONS ***********/
