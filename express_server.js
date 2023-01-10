@@ -5,25 +5,20 @@ const PORT = 8080; // default port 8080
 app.set('view engine', 'ejs');
 
 /***************************************/
-/************ MIDDLEWARE ****************/
+/************ MIDDLWARE ****************/
 /***************************************/
 
 // converts request body into readable string
 app.use(express.urlencoded({ extended: true }));
 let cookies = require('cookie-parser');
-const { reset } = require('nodemon');
 app.use(cookies());
 /***************************************/
-/************* DATABASES ****************/
+/************* DATABASE ****************/
 /***************************************/
 
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
   '9sm5xK': 'http://www.google.com',
-};
-
-const users = {
-
 };
 
 /***************************************/
@@ -39,6 +34,10 @@ const generateRandomString = function (length = 6) {
 /*************** ROUTES ****************/
 /***************************************/
 
+// registers a handler on the root path '/'
+app.get('/', (req, res) => {
+  res.redirect('/urls');
+});
 
 /***************************************/
 /********* CREATE OPERATIONS ***********/
@@ -66,66 +65,13 @@ app.post('/urls', (req, res) => {
 // CREATE NEW LOGIN
 app.post('/login', (req, res) => {
   let username = req.body.username.toLowerCase();
-  res.cookie('user_id', user_id);
-  res.redirect('/urls');
-})
-
-// REGISTER (FORM)
-// GET route for registration form
-app.get('/register', (req, res) => {
-  const templateVars = {
-    email: req.cookies['email'],
-    password: req.cookies['password'],
-    user: users[req.cookies['user_id']],
-  };
-  res.render('register', templateVars);
-})
-
-
-// // some other method...
-// ...
-// let userId = req.cookies['user_id'];
-// let user = users[userId];
-// ...
-
-
-// CREATE NEW REGISTRANT
-app.post('/register', (req, res) => {
-  // server generates short random user id
-  let userId = generateRandomString(6);
-  let user = {
-    id: userId,
-    email: req.body.email.toLowerCase(),
-    password: req.body.password,
-  }
-
-  // Add the user to our global user store
-  users[userId] = user;
-
-  res.cookie('user_id', userId);
-  console.log(users);
+  res.cookie('username', username);
   res.redirect('/urls');
 })
 
 /***************************************/
 /********* READ OPERATIONS ***********/
 /***************************************/
-
-// registers handler for the path /urls.json
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
-});
-
-// GET route for URLs table template
-// READ ALL
-app.get('/urls', (req, res) => {
-  let user = users[req.cookies['user_id']];
-  const templateVars = {
-    urls: urlDatabase,
-    'user': user,
-  };
-  res.render('urls_index', templateVars);
-});
 
 // set a redirect to the longURL
 app.get('/u/:id', (req, res) => {
@@ -147,24 +93,33 @@ app.get('/urls/:id', (req, res) => {
   const templateVars = {
     id: id,
     longURL: urlDatabase[id],
-    user: null
+    username: req.cookies['username']
   };
   res.render('urls_show', templateVars);
 });
 
 
 
-
-// registers a handler on the root path '/'
-app.get('/', (req, res) => {
-  res.redirect('/urls');
+// registers handler for the path /urls.json
+app.get('/urls.json', (req, res) => {
+  res.json(urlDatabase);
 });
+
+// GET route for URLs table template
+// READ ALL
+app.get('/urls', (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies['username'],
+  };
+  res.render('urls_index', templateVars);
+});
+
 
 // registers a handler for the path /hello
 app.get('/hello', (req, res) => {
   res.send('<html><body>Hello <b>World</b></body></html>\n');
 });
-
 
 /***************************************/
 /********* UPDATE OPERATIONS ***********/
