@@ -48,19 +48,13 @@ const getUserByEmail = function(email) {
 
 
 
-/***************************************/
-/*************** ROUTES ****************/
-/***************************************/
-
-
-
 /********* CREATE OPERATIONS ***********/
 
 // a GET route to render the urls_new.ejs template in the browser, to present the form to the user
 // CREATE (FORM)
 app.get('/urls/new', (req, res) => {
   const templateVars = {
-    username: req.cookies['username'],
+    userId: req.cookies['user_id'],
   };
   res.render('urls_new');
 });
