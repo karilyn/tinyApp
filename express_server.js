@@ -75,20 +75,10 @@ app.post('/urls', (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
-// CREATE NEW LOGIN
-app.post('/login', (req, res) => {
-  const { email, password } = req.body
-  let username = req.body.username.toLowerCase();
 
 
-
-
-  res.cookie('user_id', userId);
-  res.redirect('/urls');
-})
-
-// REGISTER (FORM)
-// GET route for registration form
+// NEW USER REGISTRATION
+// GET /register
 app.get('/register', (req, res) => {
   const templateVars = {
     email: req.cookies['email'],
@@ -98,17 +88,16 @@ app.get('/register', (req, res) => {
   res.render('register', templateVars);
 })
 
-
 // // some other method...
 // ...
 // let userId = req.cookies['user_id'];
 // let user = users[userId];
 // ...
 
-// CREATE NEW REGISTRANT
+// POST /register
 app.post('/register', (req, res) => {
   // server generates short random user id
-  let { email, password } = req.body;
+  const { email, password } = req.body;
   email = email.toLowerCase();
   const userId = generateRandomString();
 
@@ -133,6 +122,47 @@ app.post('/register', (req, res) => {
   // console.log(user);
   res.redirect('/urls');
 })
+
+// USER LOGIN/LOGOUT
+// GET /login
+app.get('/login', (req, res) => {
+  const templateVars = {
+    email: req.cookies['email'],
+    password: req.cookies['password'],
+  };
+  res.render('login', templateVars);
+})
+
+// POST /login
+app.post('/login', (req, res) => {
+  const { email, password } = req.body
+  email = email.toLowerCase();
+  let user;
+  for (const userId in users) {
+    // comparing the emails in database to the email above
+    if (users[userId].email === email) {
+      user = users[userId]
+    }
+  }
+
+  if (!getUserByEmail(email)){
+    //email doesn't exist in database
+    return res.status(403).send("Email cannot be found");
+  }
+  if (user.password !== password) {
+    return res.status(403).send("Password doesn't match. Please try again.");
+  }
+  // if the user exists and the passwords match, give them a cookie
+  res.cookie('user_id', user.userId);
+  res.redirect('/urls');
+});
+
+//POST /logout
+app.post.('/logout', (req, res) => {
+  // call the response object, don't need to parse to clear
+  res.clearCookie("user_id");
+  res.redirect("/login");
+});
 
 /********* READ OPERATIONS ***********/
 
@@ -173,14 +203,10 @@ app.get('/urls/:id', (req, res) => {
 });
 
 
-
-
 // registers a handler on the root path '/'
 app.get('/', (req, res) => {
   res.redirect('/urls');
 });
-
-
 
 
 /********* UPDATE OPERATIONS ***********/
@@ -191,10 +217,6 @@ app.post('/urls/:id/edit', (req, res) => {
   res.redirect('/urls');
 })
 
-app.get('/logout', (req, res) => {
-  res.clearCookie('username');
-  res.redirect('/urls');
-})
 
 /********* DELETE OPERATIONS ***********/
 
