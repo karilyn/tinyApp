@@ -13,6 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 let cookies = require('cookie-parser');
 const { reset } = require('nodemon');
 app.use(cookies());
+
 /***************************************/
 /************* DATABASES ****************/
 /***************************************/
@@ -22,17 +23,29 @@ const urlDatabase = {
   '9sm5xK': 'http://www.google.com',
 };
 
-const users = {
-
-};
+// created empty users object to add new users to
+const users = {};
 
 /***************************************/
 /************ FUNCTIONS ****************/
 /***************************************/
 
-const generateRandomString = function (length = 6) {
-  return Math.random().toString(36).substr(2, length)
+// random string generator for generating short URL and userID
+const generateRandomString = function () {
+  return Math.random().toString(36).slice(2, 8);
 };
+
+// email lookup helper function
+const getUserByEmail = function(email) {
+  let user;
+  for (let userId in users) {
+    if (users[userId].email === email) {
+       return users[userId];
+    }
+  }
+  return null;
+}
+
 
 
 /***************************************/
@@ -40,9 +53,8 @@ const generateRandomString = function (length = 6) {
 /***************************************/
 
 
-/***************************************/
+
 /********* CREATE OPERATIONS ***********/
-/***************************************/
 
 // a GET route to render the urls_new.ejs template in the browser, to present the form to the user
 // CREATE (FORM)
@@ -65,8 +77,13 @@ app.post('/urls', (req, res) => {
 
 // CREATE NEW LOGIN
 app.post('/login', (req, res) => {
+  const { email, password } = req.body
   let username = req.body.username.toLowerCase();
-  res.cookie('user_id', user_id);
+
+
+
+
+  res.cookie('user_id', userId);
   res.redirect('/urls');
 })
 
@@ -88,28 +105,36 @@ app.get('/register', (req, res) => {
 // let user = users[userId];
 // ...
 
-
 // CREATE NEW REGISTRANT
 app.post('/register', (req, res) => {
   // server generates short random user id
-  let userId = generateRandomString(6);
-  let user = {
-    id: userId,
-    email: req.body.email.toLowerCase(),
-    password: req.body.password,
-  }
+  let { email, password } = req.body;
+  email = email.toLowerCase();
+  const userId = generateRandomString();
 
-  // Add the user to our global user store
+  if (getUserByEmail(email)){
+    //user already exists
+    return res.status(400).send("User already exists");
+  }
+  // check to see if the email or password are empty strings
+  if ((email === '') || (password === '')) {
+    return res.status(400).send('Please make sure the fields are not empty');
+  };
+
+  let user = {
+    userId,
+    email,
+    password,
+  }
   users[userId] = user;
 
+  // now that the user is in the database, set the cookie
   res.cookie('user_id', userId);
-  console.log(users);
+  // console.log(user);
   res.redirect('/urls');
 })
 
-/***************************************/
 /********* READ OPERATIONS ***********/
-/***************************************/
 
 // registers handler for the path /urls.json
 app.get('/urls.json', (req, res) => {
@@ -160,15 +185,11 @@ app.get('/', (req, res) => {
   res.redirect('/urls');
 });
 
-// registers a handler for the path /hello
-app.get('/hello', (req, res) => {
-  res.send('<html><body>Hello <b>World</b></body></html>\n');
-});
 
 
-/***************************************/
+
 /********* UPDATE OPERATIONS ***********/
-/***************************************/
+
 app.post('/urls/:id/edit', (req, res) => {
   let id = req.params.id;
   urlDatabase[id] = req.body.longURL;
@@ -180,9 +201,7 @@ app.get('/logout', (req, res) => {
   res.redirect('/urls');
 })
 
-/***************************************/
 /********* DELETE OPERATIONS ***********/
-/***************************************/
 
 // registers POST route to remove URL resource
 app.post('/urls/:id/delete', (req, res) => {
@@ -194,9 +213,7 @@ app.post('/urls/:id/delete', (req, res) => {
 });
 
 
-/***************************************/
 /********* SERVER LISTENING ************/
-/***************************************/
 app.listen(PORT, () => {
   console.log(`TinyApp listening on port ${PORT}!`);
 });
