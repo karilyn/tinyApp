@@ -136,11 +136,6 @@ app.post('/register', (req, res) => {
 
 /********* READ OPERATIONS ***********/
 
-// registers handler for the path /urls.json
-app.get('/urls.json', (req, res) => {
-  res.json(urlDatabase);
-});
-
 // GET route for URLs table template
 // READ ALL
 app.get('/urls', (req, res) => {
