@@ -14,25 +14,20 @@
       integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS"
       crossorigin="anonymous"
     />
-    <title>Register</title>
+    <title>Login</title>
   </head>
   <body>
     <header>
       <%- include('partials/_header'); %>
     </header>
     <main style="margin: 1em;">
-      <h3>Register</h3>
-      <form method="POST" action="/register">
+      <h3>Login</h3>
+      <form method="POST" action="/login">
         <label for="email">Email:</label>
-        <br />
         <input type="email" name="email">
-        <br />
         <label for="password">Password:</label>
-        <br />
         <input type="password" name="password">
-        <br />
-        <br />
-        <button type="submit">Register</button>
+        <button type="submit">Login</button>
        </form>
     </main>
 
@@ -55,3 +50,5 @@
   ></script>
 </body>
 </html>
+
+
