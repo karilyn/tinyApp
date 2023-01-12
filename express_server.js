@@ -24,7 +24,13 @@ const urlDatabase = {
 };
 
 // created empty users object to add new users to
-const users = {};
+const users = {
+  'one': {
+    id: 'one',
+    email: 'simon@simonwex.com',
+    password: 'adawake',
+  }
+};
 
 /***************************************/
 /************ FUNCTIONS ****************/
@@ -54,7 +60,7 @@ const getUserByEmail = function(email) {
 // CREATE (FORM)
 app.get('/urls/new', (req, res) => {
   const templateVars = {
-    userId: req.cookies['user_id'],
+    user: users[req.cookies['user_id']],
   };
   res.render('urls_new');
 });
@@ -77,7 +83,6 @@ app.get('/register', (req, res) => {
   const templateVars = {
     email: req.cookies['email'],
     password: req.cookies['password'],
-    user: users[req.cookies['user_id']],
   };
   res.render('register', templateVars);
 })
@@ -91,9 +96,9 @@ app.get('/register', (req, res) => {
 // POST /register
 app.post('/register', (req, res) => {
   // server generates short random user id
-  const { email, password } = req.body;
+  let { email, password } = req.body;
   email = email.toLowerCase();
-  const userId = generateRandomString();
+  let userId = generateRandomString();
 
   if (getUserByEmail(email)){
     //user already exists
@@ -105,7 +110,7 @@ app.post('/register', (req, res) => {
   };
 
   let user = {
-    userId,
+    id,
     email,
     password,
   }
@@ -129,17 +134,11 @@ app.get('/login', (req, res) => {
 
 // POST /login
 app.post('/login', (req, res) => {
-  const { email, password } = req.body
+  let { email, password } = req.body;
   email = email.toLowerCase();
-  let user;
-  for (const userId in users) {
-    // comparing the emails in database to the email above
-    if (users[userId].email === email) {
-      user = users[userId]
-    }
-  }
+  let user = getUserByEmail(email);
 
-  if (!getUserByEmail(email)){
+  if (!user){
     //email doesn't exist in database
     return res.status(403).send("Email cannot be found");
   }
@@ -147,12 +146,14 @@ app.post('/login', (req, res) => {
     return res.status(403).send("Password doesn't match. Please try again.");
   }
   // if the user exists and the passwords match, give them a cookie
-  res.cookie('user_id', user.userId);
+  res.cookie('user_id', user.id);
   res.redirect('/urls');
 });
 
-//POST /logout
-app.post.('/logout', (req, res) => {
+
+
+//GET /logout
+app.get('/logout', (req, res) => {
   // call the response object, don't need to parse to clear
   res.clearCookie("user_id");
   res.redirect("/login");
@@ -166,7 +167,7 @@ app.get('/urls', (req, res) => {
   let user = users[req.cookies['user_id']];
   const templateVars = {
     urls: urlDatabase,
-    'user': user,
+    user: user,
   };
   res.render('urls_index', templateVars);
 });
@@ -191,7 +192,7 @@ app.get('/urls/:id', (req, res) => {
   const templateVars = {
     id: id,
     longURL: urlDatabase[id],
-    user: null
+    user: users[req.cookies['user_id']],
   };
   res.render('urls_show', templateVars);
 });
