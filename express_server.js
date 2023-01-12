@@ -23,8 +23,14 @@ app.use(cookies());
 /************* DATABASES ****************/
 
 const urlDatabase = {
-  'b2xVn2': 'http://www.lighthouselabs.ca',
-  '9sm5xK': 'http://www.google.com',
+  'b2xVn2': {
+    longURL: "https://www.lighthouselabs.ca",
+    userId: "aJ48lW",
+  },
+  '9sm5xK': {
+    longURL: "https://www.google.ca",
+    userId: "aJ48lW",
+  },
 };
 
 // created empty users object to add new users to
@@ -181,7 +187,7 @@ app.post('/urls', (req, res) => {
   // server generates short random id, adds it to database
   let id = generateRandomString(6);
   // the value of the new id is the longURL submitted by user
-  urlDatabase[id] = req.body.longURL;
+  urlDatabase[id].longURL = req.body.longURL;
   // the POST then redirects to the url page for that unique id
   res.redirect(`/urls/${id}`);
 });
@@ -219,7 +225,7 @@ app.get('/urls/:id', (req, res) => {
 
   const templateVars = {
     id: id,
-    longURL: urlDatabase[id],
+    longURL: urlDatabase[id].longURL,
     user: users[req.cookies['user_id']],
   };
   res.render('urls_show', templateVars);
@@ -236,7 +242,7 @@ app.get('/', (req, res) => {
 
 app.post('/urls/:id/edit', (req, res) => {
   let id = req.params.id;
-  urlDatabase[id] = req.body.longURL;
+  urlDatabase[id].longURL = req.body.longURL;
   res.redirect('/urls');
 });
 
