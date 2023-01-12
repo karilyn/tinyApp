@@ -46,12 +46,11 @@ const getUserByEmail = function(email) {
   let user;
   for (let userId in users) {
     if (users[userId].email === email) {
-       return users[userId];
+      return users[userId];
     }
   }
   return null;
-}
-
+};
 
 
 /********* CREATE OPERATIONS ***********/
@@ -85,13 +84,7 @@ app.get('/register', (req, res) => {
     password: req.cookies['password'],
   };
   res.render('register', templateVars);
-})
-
-// // some other method...
-// ...
-// let userId = req.cookies['user_id'];
-// let user = users[userId];
-// ...
+});
 
 // POST /register
 app.post('/register', (req, res) => {
@@ -100,27 +93,27 @@ app.post('/register', (req, res) => {
   email = email.toLowerCase();
   let userId = generateRandomString();
 
-  if (getUserByEmail(email)){
+  if (getUserByEmail(email)) {
     //user already exists
     return res.status(400).send("User already exists");
   }
   // check to see if the email or password are empty strings
   if ((email === '') || (password === '')) {
     return res.status(400).send('Please make sure the fields are not empty');
-  };
+  }
 
   let user = {
     id,
     email,
     password,
-  }
+  };
   users[userId] = user;
 
   // now that the user is in the database, set the cookie
   res.cookie('user_id', userId);
   // console.log(user);
   res.redirect('/urls');
-})
+});
 
 // USER LOGIN/LOGOUT
 // GET /login
@@ -130,7 +123,7 @@ app.get('/login', (req, res) => {
     password: req.cookies['password'],
   };
   res.render('login', templateVars);
-})
+});
 
 // POST /login
 app.post('/login', (req, res) => {
@@ -138,7 +131,7 @@ app.post('/login', (req, res) => {
   email = email.toLowerCase();
   let user = getUserByEmail(email);
 
-  if (!user){
+  if (!user) {
     //email doesn't exist in database
     return res.status(403).send("Email cannot be found");
   }
@@ -177,10 +170,9 @@ app.get('/u/:id', (req, res) => {
   // look up the longURL from the id
   let longURL = urlDatabase[req.params.id];
   // if the id exists in the database, go to its page
-  if (longURL){
+  if (longURL) {
     res.redirect(longURL);
-  }
-  else {
+  } else {
     res.redirect('/urls'); // if not, go back to index
   }
 });
@@ -210,7 +202,7 @@ app.post('/urls/:id/edit', (req, res) => {
   let id = req.params.id;
   urlDatabase[id] = req.body.longURL;
   res.redirect('/urls');
-})
+});
 
 
 /********* DELETE OPERATIONS ***********/
