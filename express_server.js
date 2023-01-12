@@ -3,20 +3,22 @@ const app = express();
 const PORT = 8080; // default port 8080
 // setting EJS as templating engine
 app.set('view engine', 'ejs');
+const bcrypt = require('/bcrypt');
+const cookieSession = require('cookie-session');
 
-/***************************************/
+const cookieSessionConfig = cookieSession({
+  name: 'session_id',
+  keys: ['verySecret', 'anotherKey'],
+  maxAge: 24 * 60 * 60 * 1000
+});
+
 /************ MIDDLEWARE ****************/
-/***************************************/
-
-// converts request body into readable string
 app.use(express.urlencoded({ extended: true }));
-let cookies = require('cookie-parser');
+// let cookies = require('cookie-parser');
 const { reset } = require('nodemon');
-app.use(cookies());
-
-/***************************************/
+// app.use(cookies());
+app.use(cookieSessionConfig)
 /************* DATABASES ****************/
-/***************************************/
 
 const urlDatabase = {
   'b2xVn2': 'http://www.lighthouselabs.ca',
@@ -32,9 +34,7 @@ const users = {
   }
 };
 
-/***************************************/
 /************ FUNCTIONS ****************/
-/***************************************/
 
 // random string generator for generating short URL and userID
 const generateRandomString = function () {
@@ -93,6 +93,7 @@ app.post('/register', (req, res) => {
   email = email.toLowerCase();
   let userId = generateRandomString();
 
+  // find the user by their email address
   if (getUserByEmail(email)) {
     //user already exists
     return res.status(400).send("User already exists");
@@ -102,13 +103,18 @@ app.post('/register', (req, res) => {
     return res.status(400).send('Please make sure the fields are not empty');
   }
 
+
   let user = {
     id,
     email,
-    password,
+    password: hash_passwrod,
   };
   users[userId] = user;
 
+  const isMatch = bcrypt.compareSync(password, user.password)
+  if (!isMatch) {
+    return res.status(400).send('Error authenticating user');
+  }
   // now that the user is in the database, set the cookie
   res.cookie('user_id', userId);
   // console.log(user);
@@ -139,16 +145,27 @@ app.post('/login', (req, res) => {
     return res.status(403).send("Password doesn't match. Please try again.");
   }
   // if the user exists and the passwords match, give them a cookie
-  res.cookie('user_id', user.id);
-  res.redirect('/urls');
+  // res.cookie('user_id', user.id);
+  req.session.userId = user.id;
+  req.session.email = user.email;
+  res.redirect('/protected');
 });
 
 
+// GET / protected
+app.get('/protected', (req, res) => {
+  const userId = req.sesssion.userId;
+  if (!userId) {
+
+  }
+})
 
 //GET /logout
 app.get('/logout', (req, res) => {
   // call the response object, don't need to parse to clear
-  res.clearCookie("user_id");
+  // res.clearCookie("user_id");
+  // remove the cookie session to clear the cookies from the browser
+  req.session = null;
   res.redirect("/login");
 });
 
