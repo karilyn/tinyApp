@@ -12,3 +12,5 @@ console.log('Hash: ', hash);
 // process to compare password and hash
 const isMatch = bcrypt.compareSync(PASSWORD, hash)
 console.log('Are passwords the same? ', isMatch);
+
+module.exports = { bcrypt }
