@@ -43,7 +43,7 @@ const users = {
   'one': {
     id: 'one',
     email: 'karilyn.kempton@gmail.com',
-    password: 'banana',
+    password: bcrypt.hashSync('banana', 10),
   }
 };
 
