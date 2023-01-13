@@ -48,11 +48,12 @@ const generateRandomString = function () {
 };
 
 // email lookup helper function
-const getUserByEmail = function(email) {
+const getUserByEmail = function(email, users) {
   let user;
   for (let userId in users) {
     if (users[userId].email === email) {
-      return users[userId];
+      // return users[userId];
+      return user
     }
   }
   return null;
@@ -92,7 +93,7 @@ app.post('/register', (req, res) => {
   let userId = generateRandomString();
 
   // find the user by their email address
-  if (getUserByEmail(email)) {
+  if (getUserByEmail(email, users)) {
     //user already exists
     return res.status(400).send("User already exists");
   }
@@ -102,7 +103,7 @@ app.post('/register', (req, res) => {
   }
 
   let user = {
-    userId,
+    id,
     email,
     password: hashedPassword,
   };
@@ -138,7 +139,7 @@ app.post('/login', (req, res) => {
   let { email, password } = req.body;
   email = email.toLowerCase();
   const hashedPassword = bcrypt.hashSync(password, 10);
-  let user = getUserByEmail(email);
+  let user = getUserByEmail(email, users);
 
   if (!user) {
     //email doesn't exist in database
@@ -149,13 +150,12 @@ app.post('/login', (req, res) => {
     return res.status(400).send('Error authenticating user');
   }
   // if the user exists and the passwords match, give them a cookie
-  req.session.user_id = userId;
+  req.session.user_id = user.id;
   res.redirect('/urls');
 });
 
 //GET /logout
 app.get('/logout', (req, res) => {
-  // res.clearCookie('user_id');
   // remove the cookie session to clear the cookies from the browser
   req.session = null;
   res.redirect("/login");
@@ -226,7 +226,7 @@ app.get('/urls', (req, res) => {
 
 app.get('/debug', (req, resp) => {
   resp.render('debug', {
-    userId: req.session.user_id,
+    sessionInfo: JSON.stringify(req.session, null, '  '),
     urlDatabase: JSON.stringify(urlDatabase, null, '  '),
     users: JSON.stringify(users, null, '  '),
   });
