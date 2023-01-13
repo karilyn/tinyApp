@@ -3,8 +3,9 @@ const app = express();
 const PORT = 8080; // default port 8080
 // setting EJS as templating engine
 app.set('view engine', 'ejs');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 let cookies = require('cookie-parser');
+
 
 // const cookieSession = require('cookie-session');
 
@@ -93,6 +94,7 @@ app.post('/register', (req, res) => {
   // server generates short random user id
   let { email, password } = req.body;
   email = email.toLowerCase();
+  const hashedPassword = bcrypt.hashSync(password, 10);
   let userId = generateRandomString();
 
   // find the user by their email address
@@ -109,16 +111,16 @@ app.post('/register', (req, res) => {
   let user = {
     userId,
     email,
-    password,
+    password: hashedPassword,
   };
   users[userId] = user;
 
-  // const isMatch = bcrypt.compareSync(password, user.password)
-  // if (!isMatch) {
-  //   return res.status(400).send('Error authenticating user');
-  // }
+ const isMatch = bcrypt.compareSync(password, hashedPassword)
+  if (!isMatch) {
+    return res.status(400).send('Error authenticating user');
+  }
   // now that the user is in the database, set the cookie
-  res.cookie('user_id', userId);
+  res.cookie('user_id', hashedPassword);
   // console.log(user);
   res.redirect('/urls');
 });
@@ -139,14 +141,16 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   let { email, password } = req.body;
   email = email.toLowerCase();
+  const hashedPassword = bcrypt.hashSync(password, 10);
   let user = getUserByEmail(email);
 
   if (!user) {
     //email doesn't exist in database
     return res.status(403).send("Email cannot be found");
   }
-  if (user.password !== password) {
-    return res.status(403).send("Password doesn't match. Please try again.");
+  const isMatch = bcrypt.compareSync(password, hashedPassword)
+  if (!isMatch) {
+    return res.status(400).send('Error authenticating user');
   }
   // if the user exists and the passwords match, give them a cookie
   res.cookie('user_id', user.id);
@@ -240,7 +244,7 @@ app.get('/u/:id', (req, res) => {
   let url = urlDatabase[req.params.id];
   longURL = url.longURL;
 
-  // if the id exists in the database, go to its page
+  // if the id exists in the database, follow the longURL link
   if (longURL) {
     res.redirect(longURL);
   } else {
@@ -276,15 +280,33 @@ app.get('/urls/:id', (req, res) => {
 
 // registers a handler on the root path '/'
 app.get('/', (req, res) => {
+  let userId = req.cookies['user_id'];
+  if (!req.cookies['user_id']) {
+    res.redirect('/login');
+  };
+
   res.redirect('/urls');
 });
 
 
 /********* UPDATE OPERATIONS ***********/
 
-app.post('/urls/:id/edit', (req, res) => {
+app.post('/urls/:id', (req, res) => {
   let id = req.params.id;
   urlDatabase[id].longURL = req.body.longURL;
+  let userId = req.cookies['user_id'];
+  let url = urlDatabase[id];
+
+  if (!req.cookies['user_id']) {
+    return res.status(400).send("You must be logged in to access this URL.");
+  }
+  // Make sure url is owned by user.
+  if (userId !== url.userId) {
+    return res.status(400).send("You do not have permission to access this URL.");
+  }
+  if (!id) {
+    return res.status(404).send("URL does not exist.");
+  }
   res.redirect('/urls');
 });
 
@@ -293,10 +315,22 @@ app.post('/urls/:id/edit', (req, res) => {
 
 // registers POST route to remove URL resource
 app.post('/urls/:id/delete', (req, res) => {
-
   let id = req.params.id;
-  delete urlDatabase[id];
+  let userId = req.cookies['user_id'];
+  let url = urlDatabase[id];
 
+  if (!req.cookies['user_id']) {
+    return res.status(400).send("You must be logged in to access your URL.");
+  }
+  // Make sure url is owned by user.
+  if (userId !== url.userId) {
+    return res.status(400).send("You do not have permission to access this URL.");
+  }
+  if (!id) {
+    return res.status(404).send("URL does not exist.");
+  }
+
+  delete urlDatabase[id];
   res.redirect('/urls');
 });
 
