@@ -84,6 +84,9 @@ app.get('/register', (req, res) => {
   if (req.cookies['user_id']) {
     return res.redirect('/urls');
   }
+  const templateVars = {
+    user: users[req.cookies['user_id']],
+  };
   res.render('register');
 
 });
@@ -132,6 +135,9 @@ app.get('/login', (req, res) => {
     return res.redirect('/urls');
   }
   // if user is logged in, /login should redirect to  GET /urls
+  const templateVars = {
+    user: users[req.cookies['user_id']],
+  };
   res.render('login');
 });
 
@@ -185,9 +191,9 @@ app.get('/urls/new', (req, res) => {
   if (!req.cookies['user_id']) {
     return res.redirect('/login');
   }
-  // const templateVars = {
-  //   user: users[req.cookies['user_id']],
-  // };
+  const templateVars = {
+    user: users[req.cookies['user_id']],
+  };
   res.render('urls_new');
 
 });
@@ -226,6 +232,7 @@ app.get('/urls', (req, res) => {
   const templateVars = {
     urls: urls,
     user: users[userId],
+    user: users[req.cookies['user_id']],
   };
   res.render('urls_index', templateVars);
 });
