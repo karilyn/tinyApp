@@ -10,6 +10,7 @@ const cookieSessionConfig = cookieSession({
   keys: ['keys[0]', 'keys[1]'],
   maxAge: 24 * 60 * 60 * 1000
 });
+const getUserByEmail = require('./helpers');
 
 /************ MIDDLEWARE ****************/
 
@@ -45,18 +46,6 @@ const users = {
 // random string generator for generating short URL and userID
 const generateRandomString = function () {
   return Math.random().toString(36).slice(2, 8);
-};
-
-// email lookup helper function
-const getUserByEmail = function(email, users) {
-  let user;
-  for (let userId in users) {
-    if (users[userId].email === email) {
-      // return users[userId];
-      return user
-    }
-  }
-  return null;
 };
 
 // function to return URLS where the userId is equal to id of logged in user
@@ -103,7 +92,7 @@ app.post('/register', (req, res) => {
   }
 
   let user = {
-    id,
+    id: userId,
     email,
     password: hashedPassword,
   };
