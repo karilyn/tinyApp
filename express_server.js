@@ -22,16 +22,20 @@ app.use(cookies());
 
 /************* DATABASES ****************/
 
+
+
 const urlDatabase = {
   'b2xVn2': {
     longURL: "https://www.lighthouselabs.ca",
-    userId: "aJ48lW",
+    userId: "one",
   },
   '9sm5xK': {
     longURL: "https://www.google.ca",
-    userId: "aJ48lW",
+    userId: "one",
   },
 };
+
+
 
 // created empty users object to add new users to
 const users = {
@@ -60,20 +64,26 @@ const getUserByEmail = function(email) {
   return null;
 };
 
+// return URLS where the userId is equal to id of logged in user
+const getUrlsForUser = function (userId) {
+  let urls = {};
+  for (let id in urlDatabase) {
+    if (userId === urlDatabase[id].userId) {
+      urls[id] = urlDatabase[id];
+    }
+  }
+  return urls;
+}
 
 /********* CREATE OPERATIONS ***********/
 
 // NEW USER REGISTRATION
 // GET /register
 app.get('/register', (req, res) => {
-  const templateVars = {
-    email: req.cookies['email'],
-    password: req.cookies['password'],
-  };
   if (req.cookies['user_id']) {
     return res.redirect('/urls');
   }
-  res.render('register', templateVars);
+  res.render('register');
 
 });
 
@@ -180,14 +190,19 @@ app.get('/urls/new', (req, res) => {
 
 // CREATE NEW ENTRY
 app.post('/urls', (req, res) => {
+  let userId = req.cookies['user_id'];
   // if user is not logged in, redirect
-  if (!req.cookies['user_id']) {
+  if (!userId) {
     return res.status(400).send("You must be logged in to shorten a URL.");
   }
   // server generates short random id, adds it to database
   let id = generateRandomString(6);
   // the value of the new id is the longURL submitted by user
-  urlDatabase[id].longURL = req.body.longURL;
+  let url = {
+    longURL: req.body.longURL,
+    'userId': userId,
+  }
+  urlDatabase[id] = url;
   // the POST then redirects to the url page for that unique id
   res.redirect(`/urls/${id}`);
 });
@@ -198,18 +213,33 @@ app.post('/urls', (req, res) => {
 // GET route for URLs table template
 // READ ALL
 app.get('/urls', (req, res) => {
-  let user = users[req.cookies['user_id']];
+  if (!req.cookies['user_id']) {
+    return res.status(400).send("You must be logged in to view the URL pages.");
+  };
+  let userId = req.cookies['user_id'];
+  let urls = getUrlsForUser(userId);
+
   const templateVars = {
-    urls: urlDatabase,
-    user: user,
+    urls: urls,
+    user: users[userId],
   };
   res.render('urls_index', templateVars);
 });
 
+app.get('/debug', (req, resp) => {
+  resp.render('debug', {
+    userId: req.cookies['user_id'],
+    urlDatabase: JSON.stringify(urlDatabase, null, '  '),
+    users: JSON.stringify(users, null, '  '),
+  });
+});
+
 // set a redirect to the longURL
 app.get('/u/:id', (req, res) => {
-  // look up the longURL from the id
-  let longURL = urlDatabase[req.params.id];
+  // look up the url from its id
+  let url = urlDatabase[req.params.id];
+  longURL = url.longURL;
+
   // if the id exists in the database, go to its page
   if (longURL) {
     res.redirect(longURL);
@@ -221,7 +251,19 @@ app.get('/u/:id', (req, res) => {
 
 // GET route for single URL
 app.get('/urls/:id', (req, res) => {
+  if (!req.cookies['user_id']) {
+    return res.status(400).send("You must be logged in to access your URL.");
+  }
   let id = req.params.id;
+  let userId = req.cookies['user_id'];
+
+  let url = urlDatabase[id];
+
+  // Make sure url is owned by user.
+  if (userId !== url.userId) {
+    return res.status(400).send("You do not have permission to access this URL.");
+  }
+  // let id = req.params.id;
 
   const templateVars = {
     id: id,
