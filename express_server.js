@@ -42,8 +42,8 @@ const urlDatabase = {
 const users = {
   'one': {
     id: 'one',
-    email: 'simon@simonwex.com',
-    password: 'adawake',
+    email: 'karilyn.kempton@gmail.com',
+    password: 'banana',
   }
 };
 
@@ -207,9 +207,16 @@ app.post('/urls', (req, res) => {
   }
   // server generates short random id, adds it to database
   let id = generateRandomString(6);
+
+  //validate/clean up URL
+  let longURL = req.body.longURL;
+  if (longURL.indexOf('http') < 0){
+    longURL = "http://" + longURL;
+  }
+
   // the value of the new id is the longURL submitted by user
   let url = {
-    longURL: req.body.longURL,
+    'longURL': longURL,
     'userId': userId,
   }
   urlDatabase[id] = url;
@@ -286,10 +293,10 @@ app.get('/urls/:id', (req, res) => {
 
 
 // registers a handler on the root path '/'
-app.get('/', (req, res) => {
+app.get('/$', (req, res) => {
   let userId = req.cookies['user_id'];
   if (!req.cookies['user_id']) {
-    res.redirect('/login');
+    return res.redirect('/login');
   };
 
   res.redirect('/urls');
