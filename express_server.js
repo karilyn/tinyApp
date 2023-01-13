@@ -1,29 +1,24 @@
 const express = require('express');
 const app = express();
-const PORT = 8080; // default port 8080
-// setting EJS as templating engine
-app.set('view engine', 'ejs');
+const PORT = 8080;
 const bcrypt = require('bcryptjs');
-let cookies = require('cookie-parser');
-
-
-// const cookieSession = require('cookie-session');
-
-// const cookieSessionConfig = cookieSession({
-//   name: 'session_id',
-//   keys: ['verySecret', 'anotherKey'],
-//   maxAge: 24 * 60 * 60 * 1000
-// });
+// let cookies = require('cookie-parser');
+const { reset } = require('nodemon');
+const cookieSession = require('cookie-session');
+const cookieSessionConfig = cookieSession({
+  name: 'session_id',
+  keys: ['keys[0]', 'keys[1]'],
+  maxAge: 24 * 60 * 60 * 1000
+});
 
 /************ MIDDLEWARE ****************/
+
+app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
-const { reset } = require('nodemon');
-app.use(cookies());
-// app.use(cookieSessionConfig)
+// app.use(cookies());
+app.use(cookieSessionConfig);
 
 /************* DATABASES ****************/
-
-
 
 const urlDatabase = {
   'b2xVn2': {
@@ -36,9 +31,7 @@ const urlDatabase = {
   },
 };
 
-
-
-// created empty users object to add new users to
+// users object to add new users to
 const users = {
   'one': {
     id: 'one',
@@ -65,7 +58,7 @@ const getUserByEmail = function(email) {
   return null;
 };
 
-// return URLS where the userId is equal to id of logged in user
+// function to return URLS where the userId is equal to id of logged in user
 const getUrlsForUser = function (userId) {
   let urls = {};
   for (let id in urlDatabase) {
@@ -74,23 +67,21 @@ const getUrlsForUser = function (userId) {
     }
   }
   return urls;
-}
+};
 
 /********* CREATE OPERATIONS ***********/
 
 // NEW USER REGISTRATION
 // GET /register
 app.get('/register', (req, res) => {
-  if (req.cookies['user_id']) {
+  if (req.session.user_id) {
     return res.redirect('/urls');
   }
   const templateVars = {
-    user: users[req.cookies['user_id']],
+    user: users[req.session.user_id],
   };
   res.render('register');
-
 });
-
 
 // POST /register
 app.post('/register', (req, res) => {
@@ -110,7 +101,6 @@ app.post('/register', (req, res) => {
     return res.status(400).send('Please make sure the fields are not empty');
   }
 
-
   let user = {
     userId,
     email,
@@ -123,7 +113,7 @@ app.post('/register', (req, res) => {
     return res.status(400).send('Error authenticating user');
   }
   // now that the user is in the database, set the cookie
-  res.cookie('user_id', hashedPassword);
+  req.session.user_id = userId;
   // console.log(user);
   res.redirect('/urls');
 });
@@ -131,12 +121,12 @@ app.post('/register', (req, res) => {
 // USER LOGIN/LOGOUT
 // GET /login
 app.get('/login', (req, res) => {
-  if (req.cookies['user_id']) {
+  if (req.session.user_id) {
     return res.redirect('/urls');
   }
   // if user is logged in, /login should redirect to  GET /urls
   const templateVars = {
-    user: users[req.cookies['user_id']],
+    user: users[req.session.user_id],
   };
   res.render('login');
 });
@@ -159,27 +149,15 @@ app.post('/login', (req, res) => {
     return res.status(400).send('Error authenticating user');
   }
   // if the user exists and the passwords match, give them a cookie
-  res.cookie('user_id', user.id);
-  // req.session.userId = user.id;
-  // req.session.email = user.email;
+  req.session.user_id = userId;
   res.redirect('/urls');
 });
 
-
-// // GET / protected
-// app.get('/protected', (req, res) => {
-//   const userId = req.session.userId;
-//   if (!userId) {
-
-//   }
-// })
-
 //GET /logout
 app.get('/logout', (req, res) => {
-  // call the response object, don't need to parse to clear
-  res.clearCookie("user_id");
+  // res.clearCookie('user_id');
   // remove the cookie session to clear the cookies from the browser
-  // req.session = null;
+  req.session = null;
   res.redirect("/login");
 });
 
@@ -188,11 +166,11 @@ app.get('/logout', (req, res) => {
 // CREATE (FORM)
 app.get('/urls/new', (req, res) => {
   // If the user is not logged in, redirect GET /urls/new to GET /login
-  if (!req.cookies['user_id']) {
+  if (!req.session.user_id) {
     return res.redirect('/login');
   }
   const templateVars = {
-    user: users[req.cookies['user_id']],
+    user: users[req.session.user_id],
   };
   res.render('urls_new');
 
@@ -200,7 +178,7 @@ app.get('/urls/new', (req, res) => {
 
 // CREATE NEW ENTRY
 app.post('/urls', (req, res) => {
-  let userId = req.cookies['user_id'];
+  let userId = req.session.user_id;
   // if user is not logged in, redirect
   if (!userId) {
     return res.status(400).send("You must be logged in to shorten a URL.");
@@ -230,23 +208,25 @@ app.post('/urls', (req, res) => {
 // GET route for URLs table template
 // READ ALL
 app.get('/urls', (req, res) => {
-  if (!req.cookies['user_id']) {
+  let userId = req.session.user_id;
+  let urls = getUrlsForUser(userId);
+
+  if (!userId) {
     return res.status(400).send("You must be logged in to view the URL pages.");
   };
-  let userId = req.cookies['user_id'];
-  let urls = getUrlsForUser(userId);
+
 
   const templateVars = {
     urls: urls,
     user: users[userId],
-    user: users[req.cookies['user_id']],
+    user: users[req.session.user_id],
   };
   res.render('urls_index', templateVars);
 });
 
 app.get('/debug', (req, resp) => {
   resp.render('debug', {
-    userId: req.cookies['user_id'],
+    userId: req.session.user_id,
     urlDatabase: JSON.stringify(urlDatabase, null, '  '),
     users: JSON.stringify(users, null, '  '),
   });
@@ -269,13 +249,13 @@ app.get('/u/:id', (req, res) => {
 
 // GET route for single URL
 app.get('/urls/:id', (req, res) => {
-  if (!req.cookies['user_id']) {
+  let id = req.params.id;
+  let userId = req.session.user_id;
+  let url = urlDatabase[id];
+
+  if (!userId) {
     return res.status(400).send("You must be logged in to access your URL.");
   }
-  let id = req.params.id;
-  let userId = req.cookies['user_id'];
-
-  let url = urlDatabase[id];
 
   // Make sure url is owned by user.
   if (userId !== url.userId) {
@@ -286,7 +266,7 @@ app.get('/urls/:id', (req, res) => {
   const templateVars = {
     id: id,
     longURL: urlDatabase[id].longURL,
-    user: users[req.cookies['user_id']],
+    user: users[req.session.user_id],
   };
   res.render('urls_show', templateVars);
 });
@@ -294,8 +274,8 @@ app.get('/urls/:id', (req, res) => {
 
 // registers a handler on the root path '/'
 app.get('/$', (req, res) => {
-  let userId = req.cookies['user_id'];
-  if (!req.cookies['user_id']) {
+  let userId = req.session.user_id;
+  if (!userId) {
     return res.redirect('/login');
   };
 
@@ -308,12 +288,12 @@ app.get('/$', (req, res) => {
 app.post('/urls/:id', (req, res) => {
   let id = req.params.id;
   urlDatabase[id].longURL = req.body.longURL;
-  let userId = req.cookies['user_id'];
+  let userId = req.session.user_id;
   let url = urlDatabase[id];
 
-  if (!req.cookies['user_id']) {
+  if (!userId) {
     return res.status(400).send("You must be logged in to access this URL.");
-  }
+  };
   // Make sure url is owned by user.
   if (userId !== url.userId) {
     return res.status(400).send("You do not have permission to access this URL.");
@@ -330,10 +310,10 @@ app.post('/urls/:id', (req, res) => {
 // registers POST route to remove URL resource
 app.post('/urls/:id/delete', (req, res) => {
   let id = req.params.id;
-  let userId = req.cookies['user_id'];
+  let userId = req.session.user_id;
   let url = urlDatabase[id];
 
-  if (!req.cookies['user_id']) {
+  if (!userId) {
     return res.status(400).send("You must be logged in to access your URL.");
   }
   // Make sure url is owned by user.
