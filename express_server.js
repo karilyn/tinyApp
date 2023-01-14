@@ -10,7 +10,8 @@ const cookieSessionConfig = cookieSession({
   keys: ['keys[0]', 'keys[1]'],
   maxAge: 24 * 60 * 60 * 1000
 });
-const getUserByEmail = require('./helpers');
+const { getUserByEmail, generateRandomString, getUrlsForUser }= require('./helpers');
+
 
 /************ MIDDLEWARE ****************/
 
@@ -41,23 +42,6 @@ const users = {
   }
 };
 
-/************ FUNCTIONS ****************/
-
-// random string generator for generating short URL and userID
-const generateRandomString = function () {
-  return Math.random().toString(36).slice(2, 8);
-};
-
-// function to return URLS where the userId is equal to id of logged in user
-const getUrlsForUser = function (userId) {
-  let urls = {};
-  for (let id in urlDatabase) {
-    if (userId === urlDatabase[id].userId) {
-      urls[id] = urlDatabase[id];
-    }
-  }
-  return urls;
-};
 
 /********* CREATE OPERATIONS ***********/
 
@@ -104,7 +88,6 @@ app.post('/register', (req, res) => {
   }
   // now that the user is in the database, set the cookie
   req.session.user_id = userId;
-  // console.log(user);
   res.redirect('/urls');
 });
 
@@ -175,7 +158,7 @@ app.post('/urls', (req, res) => {
   // server generates short random id, adds it to database
   let id = generateRandomString(6);
 
-  //validate/clean up URL
+  // validate/clean up URL to catch when users don't include the http://
   let longURL = req.body.longURL;
   if (longURL.indexOf('http') < 0) {
     longURL = "http://" + longURL;
@@ -207,12 +190,12 @@ app.get('/urls', (req, res) => {
 
   const templateVars = {
     urls: urls,
-    // user: users[userId],
     user: users[req.session.user_id],
   };
   res.render('urls_index', templateVars);
 });
 
+// debug page to monitor live cookie and database results
 app.get('/debug', (req, resp) => {
   resp.render('debug', {
     sessionInfo: JSON.stringify(req.session, null, '  '),
@@ -232,7 +215,6 @@ app.get('/u/:id', (req, res) => {
     res.redirect(longURL);
   } else {
     return res.status(404).send("URL does not exist.");
-    // res.redirect('/urls'); // if not, go back to index
   }
 });
 
@@ -250,7 +232,6 @@ app.get('/urls/:id', (req, res) => {
   if (userId !== url.userId) {
     return res.status(400).send("You do not have permission to access this URL.");
   }
-  // let id = req.params.id;
 
   const templateVars = {
     id: id,
