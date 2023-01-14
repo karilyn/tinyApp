@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const PORT = 8080;
 const bcrypt = require('bcryptjs');
-// let cookies = require('cookie-parser');
 const { reset } = require('nodemon');
 const cookieSession = require('cookie-session');
 const cookieSessionConfig = cookieSession({
@@ -23,7 +22,7 @@ const { urlDatabase,
 
 app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
-// app.use(cookies());
+app.use(methodOverride('_method'));
 app.use(cookieSessionConfig);
 
 
@@ -50,7 +49,7 @@ app.post('/register', (req, res) => {
   let userId = generateRandomString();
 
   // find the user by their email address
-  if (getUserByEmail(email, users)) {
+  if (getUserByEmail(email)) {
     //user already exists
     return res.status(400).send("User already exists");
   }
@@ -95,7 +94,7 @@ app.post('/login', (req, res) => {
   let { email, password } = req.body;
   email = email.toLowerCase();
   const hashedPassword = bcrypt.hashSync(password, 10);
-  let user = getUserByEmail(email, users);
+  let user = getUserByEmail(email);
 
   if (!user) {
     //email doesn't exist in database
@@ -152,6 +151,8 @@ app.post('/urls', (req, res) => {
   let url = {
     'longURL': longURL,
     'userId': userId,
+    visits: 0,
+    visitors: [],
   };
   urlDatabase[id] = url;
   // the POST then redirects to the url page for that unique id
@@ -190,12 +191,19 @@ app.get('/debug', (req, resp) => {
 
 // set a redirect to the longURL
 app.get('/u/:id', (req, res) => {
+
   // look up the url from its id
   let url = urlDatabase[req.params.id];
   let longURL = url.longURL;
 
   // if the id exists in the database, follow the longURL link
   if (longURL) {
+    // increment visit number by one each time the short url is followed
+    url.visits++;
+    // each user gets own session id, and add unique ones to the url.visitors array
+    if (url.visitors.indexOf(req.session.id) < 0) {
+      url.visitors.push(req.session.id);
+    }
     res.redirect(longURL);
   } else {
     return res.status(404).send("404 Error. URL does not exist.");
@@ -220,6 +228,8 @@ app.get('/urls/:id', (req, res) => {
   const templateVars = {
     id: id,
     longURL: urlDatabase[id].longURL,
+    visits: urlDatabase[id].visits,
+    numOfVisitors: urlDatabase[id].visitors.length,
     user: users[req.session.user_id],
   };
   res.render('urls_show', templateVars);
@@ -227,7 +237,7 @@ app.get('/urls/:id', (req, res) => {
 
 
 // registers a handler on the root path '/'
-app.get('/$', (req, res) => {
+app.get('/', (req, res) => {
   let userId = req.session.user_id;
   if (!userId) {
     return res.redirect('/login');
@@ -239,12 +249,12 @@ app.get('/$', (req, res) => {
 
 /********* UPDATE OPERATIONS ***********/
 
-app.put('/urls/:id/edit', (req, res) => {
+app.put('/urls/:id', (req, res) => {
   let id = req.params.id;
   urlDatabase[id].longURL = req.body.longURL;
   let userId = req.session.user_id;
   let url = urlDatabase[id];
-
+  // make sure user is logged in
   if (!userId) {
     return res.status(400).send("You must be logged in to access this URL.");
   }
