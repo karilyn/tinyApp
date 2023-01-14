@@ -10,7 +10,12 @@ const cookieSessionConfig = cookieSession({
   keys: ['keys[0]', 'keys[1]'],
   maxAge: 24 * 60 * 60 * 1000
 });
-const { getUserByEmail, generateRandomString, getUrlsForUser }= require('./helpers');
+const { urlDatabase,
+        users,
+        generateRandomString,
+        getUrlsForUser,
+        getUserByEmail,
+      } = require('./helpers');
 
 
 /************ MIDDLEWARE ****************/
@@ -19,28 +24,6 @@ app.set('view engine', 'ejs');
 app.use(express.urlencoded({ extended: true }));
 // app.use(cookies());
 app.use(cookieSessionConfig);
-
-/************* DATABASES ****************/
-
-const urlDatabase = {
-  'b2xVn2': {
-    longURL: "https://www.lighthouselabs.ca",
-    userId: "one",
-  },
-  '9sm5xK': {
-    longURL: "https://www.google.ca",
-    userId: "one",
-  },
-};
-
-// users object to add new users to
-const users = {
-  'one': {
-    id: 'one',
-    email: 'karilyn.kempton@gmail.com',
-    password: bcrypt.hashSync('banana', 10),
-  }
-};
 
 
 /********* CREATE OPERATIONS ***********/
@@ -214,7 +197,7 @@ app.get('/u/:id', (req, res) => {
   if (longURL) {
     res.redirect(longURL);
   } else {
-    return res.status(404).send("URL does not exist.");
+    return res.status(404).send("404 Error. URL does not exist.");
   }
 });
 
@@ -225,7 +208,7 @@ app.get('/urls/:id', (req, res) => {
   let url = urlDatabase[id];
 
   if (!userId) {
-    return res.status(400).send("You must be logged in to access your URL.");
+    return res.status(404).send("<h1>404 Error. You must be <a href='/login'>logged in</a> to access your URL.</h1>");
   }
 
   // Make sure url is owned by user.
