@@ -22,7 +22,7 @@
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
-        <form action="/urls/<%= id %>edit?_method=PUT" method="POST">
+        <form action="/urls/<%= id %>?_method=PUT" method="POST">
           <label for="longURL">Edit the URL:</label>
             <input
               placeholder="http://"
@@ -33,6 +33,8 @@
           </div>
         </form>
       <div class="card-footer text-muted"></div>
+      <p>Number of Visits: <%= visits %></p>
+      <p>Number of Unique Visitors: <%= numOfVisitors %></p>
     </div>
     <!-- Bootstrap JS -->
     <script
