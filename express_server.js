@@ -172,7 +172,6 @@ app.get('/urls', (req, res) => {
     return res.status(400).send("You must be logged in to view the URL pages.");
   };
 
-
   const templateVars = {
     urls: urls,
     user: users[req.session.user_id],
@@ -206,7 +205,7 @@ app.get('/u/:id', (req, res) => {
     }
     res.redirect(longURL);
   } else {
-    return res.status(404).send("404 Error. URL does not exist.");
+    return res.status(404).send("<h2>404 Error. Page not found.</h2>");
   }
 });
 
@@ -217,12 +216,16 @@ app.get('/urls/:id', (req, res) => {
   let url = urlDatabase[id];
 
   if (!userId) {
-    return res.status(404).send("<h1>404 Error. You must be <a href='/login'>logged in</a> to access your URL.</h1>");
+    return res.status(403).send("<h2>403 Error. You must be <a href='/login'>logged in</a> to access your URL.</h2>");
   }
 
+  // Make sure url exists
+  if (!url) {
+    return res.status(404).send("<h2>404 Error. Page not found.</h2>");
+  }
   // Make sure url is owned by user.
   if (userId !== url.userId) {
-    return res.status(400).send("You do not have permission to access this URL.");
+    return res.status(400).send("h2>403 Error. You do not have permission to access this URL.</h2>");
   }
 
   const templateVars = {
