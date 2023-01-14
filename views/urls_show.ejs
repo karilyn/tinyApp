@@ -22,7 +22,7 @@
         <p class="card-text">
           Short URL ID: <a href="/u/<%= id %>"><%= id %></a>
         </p>
-        <form action="/urls/<%= id %>" method="POST">
+        <form action="/urls/<%= id %>edit?_method=PUT" method="POST">
           <label for="longURL">Edit the URL:</label>
             <input
               placeholder="http://"
