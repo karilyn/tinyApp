@@ -10,6 +10,7 @@ const cookieSessionConfig = cookieSession({
   keys: ['keys[0]', 'keys[1]'],
   maxAge: 24 * 60 * 60 * 1000
 });
+const methodOverride = require('method-override')
 const { urlDatabase,
         users,
         generateRandomString,
@@ -238,7 +239,7 @@ app.get('/$', (req, res) => {
 
 /********* UPDATE OPERATIONS ***********/
 
-app.post('/urls/:id', (req, res) => {
+app.put('/urls/:id/edit', (req, res) => {
   let id = req.params.id;
   urlDatabase[id].longURL = req.body.longURL;
   let userId = req.session.user_id;
@@ -261,7 +262,7 @@ app.post('/urls/:id', (req, res) => {
 /********* DELETE OPERATIONS ***********/
 
 // registers POST route to remove URL resource
-app.post('/urls/:id/delete', (req, res) => {
+app.delete('/urls/:id/delete', (req, res) => {
   let id = req.params.id;
   let userId = req.session.user_id;
   let url = urlDatabase[id];
