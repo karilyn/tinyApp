@@ -3,13 +3,12 @@ const getUserByEmail = function(email, users) {
   let user;
   for (let userId in users) {
     if (users[userId].email === email) {
-      // return users[userId];
-      return user
+      return user;
     }
   }
-  return undefined;
+  return;
 };
 
 module.exports = {
   getUserByEmail,
-}
+};

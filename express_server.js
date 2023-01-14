@@ -70,7 +70,7 @@ app.get('/register', (req, res) => {
   const templateVars = {
     user: users[req.session.user_id],
   };
-  res.render('register');
+  res.render('register', templateVars);
 });
 
 // POST /register
@@ -98,7 +98,7 @@ app.post('/register', (req, res) => {
   };
   users[userId] = user;
 
- const isMatch = bcrypt.compareSync(password, hashedPassword)
+  const isMatch = bcrypt.compareSync(password, hashedPassword);
   if (!isMatch) {
     return res.status(400).send('Error authenticating user');
   }
@@ -161,7 +161,7 @@ app.get('/urls/new', (req, res) => {
   const templateVars = {
     user: users[req.session.user_id],
   };
-  res.render('urls_new');
+  res.render('urls_new', templateVars);
 
 });
 
@@ -177,7 +177,7 @@ app.post('/urls', (req, res) => {
 
   //validate/clean up URL
   let longURL = req.body.longURL;
-  if (longURL.indexOf('http') < 0){
+  if (longURL.indexOf('http') < 0) {
     longURL = "http://" + longURL;
   }
 
@@ -185,7 +185,7 @@ app.post('/urls', (req, res) => {
   let url = {
     'longURL': longURL,
     'userId': userId,
-  }
+  };
   urlDatabase[id] = url;
   // the POST then redirects to the url page for that unique id
   res.redirect(`/urls/${id}`);
@@ -207,7 +207,7 @@ app.get('/urls', (req, res) => {
 
   const templateVars = {
     urls: urls,
-    user: users[userId],
+    // user: users[userId],
     user: users[req.session.user_id],
   };
   res.render('urls_index', templateVars);
@@ -225,7 +225,7 @@ app.get('/debug', (req, resp) => {
 app.get('/u/:id', (req, res) => {
   // look up the url from its id
   let url = urlDatabase[req.params.id];
-  longURL = url.longURL;
+  let longURL = url.longURL;
 
   // if the id exists in the database, follow the longURL link
   if (longURL) {
@@ -266,7 +266,7 @@ app.get('/$', (req, res) => {
   let userId = req.session.user_id;
   if (!userId) {
     return res.redirect('/login');
-  };
+  }
 
   res.redirect('/urls');
 });
@@ -282,7 +282,7 @@ app.post('/urls/:id', (req, res) => {
 
   if (!userId) {
     return res.status(400).send("You must be logged in to access this URL.");
-  };
+  }
   // Make sure url is owned by user.
   if (userId !== url.userId) {
     return res.status(400).send("You do not have permission to access this URL.");
