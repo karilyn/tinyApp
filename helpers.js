@@ -6,10 +6,14 @@ const urlDatabase = {
   'b2xVn2': {
     longURL: "https://www.lighthouselabs.ca",
     userId: "one",
+    visits: 0,
+    visitors: [],
   },
   '9sm5xK': {
     longURL: "https://www.google.ca",
     userId: "one",
+    visits: 0,
+    visitors: [],
   },
 };
 
@@ -23,8 +27,6 @@ const users = {
 };
 
 
-
-
 /************** FUNCTIONS ***************/
 
 // random string generator for generating short URL and userID
@@ -33,20 +35,22 @@ const generateRandomString = function () {
 };
 
 // function to return URLS where the userId is equal to id of logged in user
-const getUrlsForUser = function (userId, urlDatabase) {
+const getUrlsForUser = function (userId) {
   let urls = {};
   for (let id in urlDatabase) {
-    if (userId === urlDatabase[id].userId) {
-      urls[id] = urlDatabase[id];
+    let url = urlDatabase[id];
+    if (userId === url.userId) {
+      urls[id] = url;
     }
   }
   return urls;
 };
 // email lookup helper function
-const getUserByEmail = function(email, users) {
+const getUserByEmail = function(email) {
   let user;
   for (let userId in users) {
-    if (users[userId].email === email) {
+    user = users[userId];
+    if (user.email === email) {
       return user;
     }
   }
