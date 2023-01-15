@@ -9,13 +9,14 @@ const cookieSessionConfig = cookieSession({
   keys: ['keys[0]', 'keys[1]'],
   maxAge: 24 * 60 * 60 * 1000
 });
-const methodOverride = require('method-override')
-const { urlDatabase,
-        users,
-        generateRandomString,
-        getUrlsForUser,
-        getUserByEmail,
-      } = require('./helpers');
+const methodOverride = require('method-override');
+const {
+  urlDatabase,
+  users,
+  generateRandomString,
+  getUrlsForUser,
+  getUserByEmail,
+} = require('./helpers');
 
 
 /************ MIDDLEWARE ****************/
@@ -84,7 +85,7 @@ app.get('/login', (req, res) => {
   const templateVars = {
     user: users[req.session.user_id],
   };
-  res.render('login');
+  res.render('login', templateVars);
 });
 
 
@@ -100,7 +101,7 @@ app.post('/login', (req, res) => {
     //email doesn't exist in database
     return res.status(403).send("Email cannot be found");
   }
-  const isMatch = bcrypt.compareSync(password, hashedPassword)
+  const isMatch = bcrypt.compareSync(password, hashedPassword);
   if (!isMatch) {
     return res.status(400).send('Error authenticating user');
   }
@@ -170,7 +171,7 @@ app.get('/urls', (req, res) => {
 
   if (!userId) {
     return res.status(400).send("You must be logged in to view the URL pages.");
-  };
+  }
 
   const templateVars = {
     urls: urls,
